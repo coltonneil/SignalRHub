@@ -9,9 +9,9 @@ namespace SignalR_Hub.Controllers
     [ApiController]
     public class MessageController : ControllerBase
     {
-        private IHubContext<NotifyHub, ITypedHubClient> _hubContext;
+        private IHubContext<MessageHub> _hubContext;
 
-        public MessageController(IHubContext<NotifyHub, ITypedHubClient> hubContext)
+        public MessageController(IHubContext<MessageHub> hubContext)
         {
             _hubContext = hubContext;
         }
@@ -20,16 +20,17 @@ namespace SignalR_Hub.Controllers
         public string Post([FromBody]Message msg)
         {
             string retMessage;
+            //Console.WriteLine(msg.Type);
+            if(msg.Type == "privateMessage")
+            {
+                _hubContext.Clients.Group(msg.GroupName).SendAsync("ReceiveMessage", msg.Payload);
+            }
+            else
+            {
+                _hubContext.Clients.All.SendAsync("ReceiveMessage", msg.Payload);
+            }
+            retMessage = "Success";
 
-            try
-            {
-                _hubContext.Clients.All.BroadcastMessage(msg.Type, msg.Payload);
-                retMessage = "Success";
-            }
-            catch (Exception e)
-            {
-                retMessage = e.ToString();
-            }
 
             return retMessage;
         }
