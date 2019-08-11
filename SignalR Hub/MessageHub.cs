@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
@@ -28,6 +28,7 @@ namespace SignalRHub
 
         public Task SendMessageToGroup(string group, string message)
         {
+            Clients.Caller.SendAsync("ReceiveMessage", "Message sent");
             return Clients.Group(group).SendAsync("ReceiveMessage", message);
         }
 
