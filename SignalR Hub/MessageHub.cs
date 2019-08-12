@@ -6,19 +6,20 @@ namespace SignalRHub
 {
     public class MessageHub : Hub
     {
-        public Task SendMessageToAll(string message)
+
+        public Task SendCardData(string connectionId, string message)
         {
-            return Clients.All.SendAsync("ReceiveMessage", message);
+            return Clients.Client(connectionId).SendAsync("RecieveCardData", message);
         }
 
-        public Task SendMessageToCaller(string message)
+        public Task PromptForPayment(string connectionId, string message)
         {
-            return Clients.Caller.SendAsync("ReceiveMessage", message);
+            return Clients.Client(connectionId).SendAsync("RecievePaymentRequest", message);
         }
 
-        public Task SendMessageToUser(string connectionId, string message)
+        public Task NotifyPaymentStatus(string connectionId, string message)
         {
-            return Clients.Client(connectionId).SendAsync("ReceiveMessage", message);
+            return Clients.Client(connectionId).SendAsync("RecievePaymentStatus", message);
         }
 
         public Task JoinGroup(string group)
@@ -26,15 +27,10 @@ namespace SignalRHub
             return Groups.AddToGroupAsync(Context.ConnectionId, group);
         }
 
-        public Task SendMessageToGroup(string group, string message)
-        {
-            Clients.Caller.SendAsync("ReceiveMessage", "Message sent");
-            return Clients.Group(group).SendAsync("ReceiveMessage", message);
-        }
-
         public override async Task OnConnectedAsync()
         {
-            await Clients.All.SendAsync("UserConnected", Context.ConnectionId);
+            await Clients.Others.SendAsync("UserConnected", Context.ConnectionId);
+            await Clients.Caller.SendAsync("Connected", Context.ConnectionId);
             await base.OnConnectedAsync();
         }
 
