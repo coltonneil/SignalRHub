@@ -24,7 +24,7 @@ namespace SignalR_Hub
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials()
-                .WithOrigins("http://localhost:4200", "http://localhost:4201");
+                .WithOrigins("https://signalr-demo-client.azurewebsites.net", "https://signalr-demo-host.azurewebsites.net");
             }));
 
             services.AddSignalR();

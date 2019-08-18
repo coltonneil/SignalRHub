@@ -1,0 +1,43 @@
+ # First tier. Only Get the docker image for building .Net Core Apps
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS dotnet-builder
+
+RUN apt-get update && apt-get install -y locales
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && dpkg-reconfigure --frontend=noninteractive locales && update-locale LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+WORKDIR /src
+COPY . .
+
+# Restore Build Dependencies
+WORKDIR /src
+RUN dotnet restore "SignalR Hub.csproj"
+
+# Build Application
+WORKDIR /src
+RUN dotnet build "SignalR Hub.csproj" -c Release
+
+FROM dotnet-builder AS publish
+## This will also set the publish directory /app. 
+RUN dotnet publish "SignalR Hub.csproj" -c Release -o /app
+
+
+# 2nd Tier. Only Get the docker image for Hosting .Net Core App. Asp.net core runtime in this case
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-alpine3.9 AS base
+
+WORKDIR /app
+
+# Final Tier. Now create the Final Image from publish tier
+FROM base AS final
+WORKDIR /app
+# Copy all the files to the new image
+COPY --from=publish /app .
+
+
+### NOTE: The base image for ASPNet core sets port 80 by default. This is the override since the app is configured to use port 5000
+### https://hub.docker.com/r/microsoft/aspnetcore/
+
+EXPOSE 80
+
+## Now run the app
+ENTRYPOINT ["dotnet", "SignalRHub.dll"]
